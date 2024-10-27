@@ -1,0 +1,35 @@
+# Core dependencies for mining and networking
+pycryptonight
+sqlalchemy
+aiosqlite
+stem
+socks
+requests
+cryptography
+libp2p
+py_snark
+
+# Additional suggested dependencies
+aiohttp
+numpy
+torch
+
+# CUDA and GPU computation dependencies
+pycuda==2023.1.4  # Adjust this version according to your CUDA installation
+
+# Cryptography libraries
+cryptography==39.0.1  # General cryptography support
+pycryptodome==3.17  # Additional cryptographic algorithms
+
+# Specific hashing libraries
+pyblake2==1.1.2  # BLAKE2 hashing library
+pysha3==1.0.2  # SHA3-256 hashing library
+
+# Optional libraries for logging and debugging
+loguru==0.5.3  # Simple logging library for better output
+
+# NumPy for numerical operations
+numpy==1.23.5  # Required for numerical operations and array manipulations
+
+# Other utilities
+requests==2.28.1  # For any API requests, if applicable
