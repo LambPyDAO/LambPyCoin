@@ -1,5 +1,4 @@
 import hashlib
-from cryptonight import cryptonight
 import logging
 import time
 import asyncio
@@ -16,35 +15,61 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 import pymongo
 from torpy import TorClient
 from libp2p import new_node
-from pysnark import snark
+from pySNARK import snark
 import socket
 import socks
 from stem import Signal
 from stem.control import Controller
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
-# MongoDB Setup
+# Database Setup
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 mongo_db = mongo_client["blockchain_db"]
 blocks_collection = mongo_db["blocks"]
 
-# LambPyHash Implementation (Fork of VerusHash with pysnark)
-@snark
-def LambPyHash(data):
-    # Step 1: Generate SHA3-256 hash of the input data
-    sha3_hash = hashlib.sha3_256(data.encode()).hexdigest()
-    
-    # Step 2: Generate BLAKE2b hash of the SHA3-256 hash
-    blake_hash = hashlib.blake2b(sha3_hash.encode()).hexdigest()
-    
-    # Step 3: Apply Cryptonight slow hash to the BLAKE2b hash
-    final_hash = cryptonight(blake_hash.encode())
-    
-    return final_hash.hex()  # Convert bytes to hex string for readability
+# Consensus Classes
+class ConsensusService:
+    def __init__(self, validators):
+        self.validators = validators
+        self.current_block = None
 
-# Block Class Definition
+    async def propose_block(self, block):
+        logging.info("Proposing block to validators...")
+        # Implement block proposal and voting logic here
+
+    def validate_block(self, block):
+        # Implement block validation logic based on validator consensus
+        pass
+
+# Cryptography Class
+class ECC:
+    def __init__(self):
+        # Implement Elliptic Curve Cryptography methods here
+        pass
+
+    def generate_keys(self):
+        # Generate ECC public/private key pair
+        pass
+
+    def sign_message(self, private_key, message):
+        # Sign a message with the private key
+        pass
+
+    def verify_signature(self, public_key, message, signature):
+        # Verify the signed message
+        pass
+
+# IO Data Structures
+class MemoryPool:
+    def __init__(self):
+        self.transactions = []
+
+    def add_transaction(self, transaction):
+        self.transactions.append(transaction)
+
+    def clear_pool(self):
+        self.transactions.clear()
+
+# Ledger Management
 class Block:
     def __init__(self, index, previous_hash, transactions, timestamp, difficulty_target, miner_address):
         self.index = index
@@ -58,7 +83,7 @@ class Block:
 
     def calculate_hash(self):
         block_string = f"{self.index}{self.previous_hash}{self.transactions}{self.timestamp}{self.difficulty_target}{self.miner_address}{self.nonce}"
-        return LambPyHash(block_string)
+        return hashlib.sha256(block_string.encode()).hexdigest()
 
     def mine_block(self, difficulty):
         logging.info("Mining started...")
@@ -73,11 +98,11 @@ class Block:
         assert int(self.hash, 16) < 2 ** (256 - self.difficulty_target), "Invalid block hash"
         return True
 
-# Blockchain Class for Managing Blocks
 class Blockchain:
     def __init__(self):
         self.chain = []
         self.difficulty = 4
+        self.memory_pool = MemoryPool()
         self.model = BlockchainLSTM()
         self.scaler = None
         self.load_blocks_from_db()
@@ -198,15 +223,47 @@ async def start_tor_network():
 async def broadcast_block(block_data):
     logging.info(f"Broadcasting block: {block_data}")
 
-# Execute the blockchain operations
-if __name__ == "__main__":
-    # Sample execution logic
-    blockchain = Blockchain()
-    new_block = Block(
-        blockchain.get_last_block().index + 1 if blockchain.chain else 0,
-        "", [], time.time(), blockchain.calculate_difficulty(), "miner_address"
-    )
-    blockchain.add_block(new_block)
+# Wallet Management
+class Wallet:
+    def __init__(self):
+        self.private_key = None
+        self.public_key = None
+        self.balance = 0
 
-    # Start the Tor and libp2p communication
-    asyncio.run(start_tor_network())
+    def generate_keys(self):
+        ecc = ECC()
+        self.private_key, self.public_key = ecc.generate_keys()
+
+    def add_balance(self, amount):
+        self.balance += amount
+
+    def subtract_balance(self, amount):
+        if amount <= self.balance:
+            self.balance -= amount
+        else:
+            raise ValueError("Insufficient balance.")
+
+# LambPyHash Implementation (Fork of VerusHash with pysnark)
+@snark
+def LambPyHash(data):
+    # Step 1: Generate SHA3-256 hash of the input data
+    sha3_hash = hashlib.sha3_256(data.encode()).hexdigest()
+    
+    # Step 2: Generate BLAKE2b hash of the SHA3-256 hash
+    blake2b_hash = hashlib.blake2b(sha3_hash.encode()).hexdigest()
+    
+    # Step 3: Return the final hash
+    return blake2b_hash
+
+# Utility Functions
+def create_logger():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def main():
+    create_logger()
+    # Initialize and run your blockchain system here
+    blockchain = Blockchain()
+    logging.info("Blockchain initialized.")
+
+if __name__ == "__main__":
+    main()
